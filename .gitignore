@@ -1,15 +1,44 @@
-# Java / Spring Boot
+# --- Java / Spring Boot ---
 target/
 *.class
+*.jar
+*.war
+*.ear
+*.log
+build_v2.log
+build.log
+
+# Maven
+.mvn/wrapper/maven-wrapper.properties
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDEs
 .idea/
 *.iml
-.mvn/wrapper/maven-wrapper.properties
+.vscode/
+*.swp
+*.swo
 
-# Node.js / React
+# --- Node.js / React (Frontend) ---
 node_modules/
 dist/
 build/
-.env
-.DS_Store
 coverage/
-.vscode/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- OS / System ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Local Development / Temporary ---
+# Portable Maven (manually downloaded)
+apache-maven-*/
+maven.zip
