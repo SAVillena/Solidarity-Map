@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class Center {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private java.util.UUID id;
 
     @Column(nullable = false)
@@ -45,6 +45,8 @@ public class Center {
 
     // PostGIS Point
     @Column(columnDefinition = "geography(Point,4326)")
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.solidaritymap.config.PointSerializer.class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.solidaritymap.config.PointDeserializer.class)
     private Point location;
 
     @CreationTimestamp

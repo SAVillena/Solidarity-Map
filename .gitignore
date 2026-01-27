@@ -42,3 +42,10 @@ Desktop.ini
 # Portable Maven (manually downloaded)
 apache-maven-*/
 maven.zip
+
+# --- Docker ---
+# Environment variables with secrets
+.env
+
+# Docker volumes
+postgres_data/
