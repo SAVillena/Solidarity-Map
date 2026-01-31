@@ -52,5 +52,101 @@ export const centerService = {
         }
 
         return response.json();
+    },
+
+    /**
+     * Obtiene un centro por su ID
+     */
+    getById: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/centers/${id}`);
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Centro no encontrado');
+            }
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        return response.json();
+    },
+
+    /**
+     * Crea un nuevo centro
+     */
+    create: async (centerData) => {
+        const response = await fetch(`${API_BASE_URL}/centers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(centerData),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Error al crear centro');
+        }
+
+        return response.json();
+    },
+
+    /**
+     * Actualiza un centro existente
+     */
+    update: async (id, centerData) => {
+        const response = await fetch(`${API_BASE_URL}/centers/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(centerData),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Error al actualizar centro');
+        }
+
+        return response.json();
+    },
+
+    /**
+     * Actualiza solo el estado de urgencia de un centro
+     */
+    updateUrgency: async (id, urgencyStatus) => {
+        const response = await fetch(`${API_BASE_URL}/centers/${id}/urgency`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ urgencyStatus }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Error al actualizar urgencia');
+        }
+
+        return response.json();
+    },
+
+    /**
+     * Elimina un centro
+     */
+    delete: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/centers/${id}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Centro no encontrado');
+            }
+            const error = await response.json();
+            throw new Error(error.message || 'Error al eliminar centro');
+        }
+
+        // DELETE retorna 204 No Content, no hay body que parsear
+        return { success: true };
     }
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { centerService } from '../services/centerService';
 
 /**
@@ -13,7 +13,7 @@ export const useCenters = (type = null) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const fetchCenters = async () => {
+    const fetchCenters = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -25,17 +25,17 @@ export const useCenters = (type = null) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [type]); // Ahora fetchCenters depende correctamente de type
 
     useEffect(() => {
         fetchCenters();
-    }, [type]);
+    }, [fetchCenters]);
 
     return {
         centers,
         loading,
         error,
-        refetch: fetchCenters,
+        refresh: fetchCenters, // Cambiado de refetch a refresh
         setCenters // Para actualizaciones desde import
     };
 };

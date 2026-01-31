@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, Phone } from 'lucide-react';
 import { getUrgencyConfig } from '../../constants/urgency';
+import { formatDistance } from '../../utils/distance';
 
 /**
  * Componente reutilizable de tarjeta de centro
@@ -19,8 +20,8 @@ const CenterCard = ({ center }) => {
                         {center.type === 'ACOPIO' ? '📦' : '🏥'} {center.name}
                     </h3>
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${center.type === 'ACOPIO'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-green-100 text-green-700'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-green-100 text-green-700'
                         }`}>
                         {center.type === 'ACOPIO' ? 'Centro de Acopio' : 'Veterinaria'}
                     </span>
@@ -37,6 +38,11 @@ const CenterCard = ({ center }) => {
                     <MapPin className="flex-shrink-0 mt-0.5" size={18} />
                     <span>{center.address}</span>
                 </div>
+                {center.distance !== undefined && (
+                    <div className="text-blue-600 font-semibold text-sm">
+                        🚶 {formatDistance(center.distance)}
+                    </div>
+                )}
                 {center.contactNumber && (
                     <div className="flex items-center gap-2">
                         <Phone size={18} />

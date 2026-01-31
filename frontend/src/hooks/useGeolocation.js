@@ -28,7 +28,6 @@ export const useGeolocation = () => {
         };
 
         const onError = (err) => {
-            console.error('Geo location error:', err);
             let errorMessage = 'No se pudo obtener tu ubicación';
 
             switch (err.code) {
@@ -45,6 +44,7 @@ export const useGeolocation = () => {
                     errorMessage = 'Error desconocido al obtener ubicación';
             }
 
+            console.warn('⚠️ Geolocalización:', errorMessage);
             setError(errorMessage);
             setLoading(false);
         };

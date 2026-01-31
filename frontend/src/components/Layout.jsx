@@ -37,8 +37,8 @@ const Layout = () => {
                                     key={path}
                                     to={path}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isActive(path)
-                                            ? 'bg-white/20 font-semibold'
-                                            : 'hover:bg-white/10'
+                                        ? 'bg-white/20 font-semibold'
+                                        : 'hover:bg-white/10'
                                         }`}
                                 >
                                     <Icon size={18} />
@@ -65,8 +65,8 @@ const Layout = () => {
                                     to={path}
                                     onClick={() => setMobileMenuOpen(false)}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive(path)
-                                            ? 'bg-white/20 font-semibold'
-                                            : 'hover:bg-white/10'
+                                        ? 'bg-white/20 font-semibold'
+                                        : 'hover:bg-white/10'
                                         }`}
                                 >
                                     <Icon size={20} />
@@ -79,7 +79,7 @@ const Layout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-hidden">
+            <main className="flex-1 overflow-auto">
                 <Outlet />
             </main>
         </div>

@@ -77,4 +77,76 @@ public class CenterController {
             throw new RuntimeException("Error al procesar el archivo Excel: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Obtiene un centro por su ID
+     * 
+     * @param id UUID del centro
+     * @return CenterDTO
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<CenterDTO> getCenterById(@PathVariable java.util.UUID id) {
+        log.info("🔍 GET /api/centers/{}", id);
+        CenterDTO center = centerService.getCenterById(id);
+        return ResponseEntity.ok(center);
+    }
+
+    /**
+     * Crea un nuevo centro
+     * 
+     * @param request Datos del centro a crear
+     * @return CenterDTO creado con status 201 Created
+     */
+    @PostMapping
+    public ResponseEntity<CenterDTO> createCenter(
+            @jakarta.validation.Valid @RequestBody com.solidaritymap.dto.CreateCenterRequest request) {
+        log.info("➕ POST /api/centers - Creando centro: {}", request.getName());
+        CenterDTO created = centerService.createCenter(request);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * Actualiza un centro existente
+     * 
+     * @param id      UUID del centro
+     * @param request Datos a actualizar
+     * @return CenterDTO actualizado
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<CenterDTO> updateCenter(
+            @PathVariable java.util.UUID id,
+            @jakarta.validation.Valid @RequestBody com.solidaritymap.dto.UpdateCenterRequest request) {
+        log.info("📝 PUT /api/centers/{}", id);
+        CenterDTO updated = centerService.updateCenter(id, request);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Actualiza solo el estado de urgencia de un centro
+     * 
+     * @param id      UUID del centro
+     * @param request Estado de urgencia (0-2)
+     * @return CenterDTO actualizado
+     */
+    @PatchMapping("/{id}/urgency")
+    public ResponseEntity<CenterDTO> updateUrgency(
+            @PathVariable java.util.UUID id,
+            @jakarta.validation.Valid @RequestBody com.solidaritymap.dto.UpdateUrgencyRequest request) {
+        log.info("⚠️ PATCH /api/centers/{}/urgency - Nuevo estado: {}", id, request.getUrgencyStatus());
+        CenterDTO updated = centerService.updateUrgency(id, request.getUrgencyStatus());
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Elimina un centro
+     * 
+     * @param id UUID del centro a eliminar
+     * @return 204 No Content
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCenter(@PathVariable java.util.UUID id) {
+        log.info("🗑️ DELETE /api/centers/{}", id);
+        centerService.deleteCenter(id);
+        return ResponseEntity.noContent().build();
+    }
 }

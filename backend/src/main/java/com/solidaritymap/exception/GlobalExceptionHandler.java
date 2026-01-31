@@ -22,131 +22,158 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Maneja excepciones cuando un recurso no se encuentra
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
-            ResourceNotFoundException ex, WebRequest request) {
+        /**
+         * Maneja excepciones cuando un recurso no se encuentra
+         */
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
+                        ResourceNotFoundException ex, WebRequest request) {
 
-        log.error("❌ Recurso no encontrado: {}", ex.getMessage());
+                log.error("❌ Recurso no encontrado: {}", ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", ""));
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.NOT_FOUND.value(),
+                                "Not Found",
+                                ex.getMessage(),
+                                request.getDescription(false).replace("uri=", ""));
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
 
-    /**
-     * Maneja errores de base de datos
-     */
-    @ExceptionHandler(DatabaseException.class)
-    public ResponseEntity<ErrorResponse> handleDatabaseException(
-            DatabaseException ex, WebRequest request) {
+        /**
+         * Maneja errores de validación (@Valid)
+         */
+        @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+        public ResponseEntity<ErrorResponse> handleValidationException(
+                        org.springframework.web.bind.MethodArgumentNotValidException ex, WebRequest request) {
 
-        log.error("❌ Error de base de datos: {}", ex.getMessage(), ex);
+                log.error("❌ Error de validación: {}", ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.SERVICE_UNAVAILABLE.value(),
-                "Database Error",
-                "Error al conectar con la base de datos. Por favor verifica que PostgreSQL esté corriendo y la extensión PostGIS esté instalada.",
-                request.getDescription(false).replace("uri=", ""));
+                Map<String, String> errors = new HashMap<>();
+                ex.getBindingResult().getFieldErrors()
+                                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
-        Map<String, Object> details = new HashMap<>();
-        details.put("originalMessage", ex.getMessage());
-        details.put("suggestion", "Ejecuta: CREATE EXTENSION IF NOT EXISTS postgis;");
-        errorResponse.setDetails(details);
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Validation Error",
+                                "Errores de validación en los datos enviados",
+                                request.getDescription(false).replace("uri=", ""));
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
-    }
+                Map<String, Object> details = new HashMap<>();
+                details.put("fieldErrors", errors);
+                errorResponse.setDetails(details);
 
-    /**
-     * Maneja argumentos inválidos
-     */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException ex, WebRequest request) {
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
 
-        log.error("❌ Argumento inválido: {}", ex.getMessage());
+        /**
+         * Maneja errores de base de datos
+         */
+        @ExceptionHandler(DatabaseException.class)
+        public ResponseEntity<ErrorResponse> handleDatabaseException(
+                        DatabaseException ex, WebRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", ""));
+                log.error("❌ Error de base de datos: {}", ex.getMessage(), ex);
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                                "Database Error",
+                                "Error al conectar con la base de datos. Por favor verifica que PostgreSQL esté corriendo y la extensión PostGIS esté instalada.",
+                                request.getDescription(false).replace("uri=", ""));
 
-    /**
-     * Maneja errores de archivo demasiado grande
-     */
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
-            MaxUploadSizeExceededException ex, WebRequest request) {
+                Map<String, Object> details = new HashMap<>();
+                details.put("originalMessage", ex.getMessage());
+                details.put("suggestion", "Ejecuta: CREATE EXTENSION IF NOT EXISTS postgis;");
+                errorResponse.setDetails(details);
 
-        log.error("❌ Archivo demasiado grande: {}", ex.getMessage());
+                return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
+        }
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.PAYLOAD_TOO_LARGE.value(),
-                "File Too Large",
-                "El archivo Excel excede el tamaño máximo permitido (10MB). Por favor sube un archivo más pequeño.",
-                request.getDescription(false).replace("uri=", ""));
+        /**
+         * Maneja argumentos inválidos
+         */
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+                        IllegalArgumentException ex, WebRequest request) {
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.PAYLOAD_TOO_LARGE);
-    }
+                log.error("❌ Argumento inválido: {}", ex.getMessage());
 
-    /**
-     * Maneja errores de I/O (lectura de archivos)
-     */
-    @ExceptionHandler(IOException.class)
-    public ResponseEntity<ErrorResponse> handleIOException(
-            IOException ex, WebRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Bad Request",
+                                ex.getMessage(),
+                                request.getDescription(false).replace("uri=", ""));
 
-        log.error("❌ Error de I/O: {}", ex.getMessage(), ex);
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "File Processing Error",
-                "Error al procesar el archivo. Asegúrate de que sea un archivo Excel válido (.xlsx).",
-                request.getDescription(false).replace("uri=", ""));
+        /**
+         * Maneja errores de archivo demasiado grande
+         */
+        @ExceptionHandler(MaxUploadSizeExceededException.class)
+        public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+                        MaxUploadSizeExceededException ex, WebRequest request) {
 
-        Map<String, Object> details = new HashMap<>();
-        details.put("originalMessage", ex.getMessage());
-        errorResponse.setDetails(details);
+                log.error("❌ Archivo demasiado grande: {}", ex.getMessage());
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                                "File Too Large",
+                                "El archivo Excel excede el tamaño máximo permitido (10MB). Por favor sube un archivo más pequeño.",
+                                request.getDescription(false).replace("uri=", ""));
 
-    /**
-     * Maneja cualquier otra excepción no capturada
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex, WebRequest request) {
+                return new ResponseEntity<>(errorResponse, HttpStatus.PAYLOAD_TOO_LARGE);
+        }
 
-        log.error("❌ Error inesperado: {}", ex.getMessage(), ex);
+        /**
+         * Maneja errores de I/O (lectura de archivos)
+         */
+        @ExceptionHandler(IOException.class)
+        public ResponseEntity<ErrorResponse> handleIOException(
+                        IOException ex, WebRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "Ocurrió un error inesperado en el servidor. Por favor revisa los logs para más detalles.",
-                request.getDescription(false).replace("uri=", ""));
+                log.error("❌ Error de I/O: {}", ex.getMessage(), ex);
 
-        Map<String, Object> details = new HashMap<>();
-        details.put("type", ex.getClass().getSimpleName());
-        details.put("originalMessage", ex.getMessage());
-        errorResponse.setDetails(details);
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "File Processing Error",
+                                "Error al procesar el archivo. Asegúrate de que sea un archivo Excel válido (.xlsx).",
+                                request.getDescription(false).replace("uri=", ""));
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+                Map<String, Object> details = new HashMap<>();
+                details.put("originalMessage", ex.getMessage());
+                errorResponse.setDetails(details);
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        /**
+         * Maneja cualquier otra excepción no capturada
+         */
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ErrorResponse> handleGlobalException(
+                        Exception ex, WebRequest request) {
+
+                log.error("❌ Error inesperado: {}", ex.getMessage(), ex);
+
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "Internal Server Error",
+                                "Ocurrió un error inesperado en el servidor. Por favor revisa los logs para más detalles.",
+                                request.getDescription(false).replace("uri=", ""));
+
+                Map<String, Object> details = new HashMap<>();
+                details.put("type", ex.getClass().getSimpleName());
+                details.put("originalMessage", ex.getMessage());
+                errorResponse.setDetails(details);
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 }

@@ -1,16 +1,13 @@
 -- Enable PostGIS extension
 CREATE EXTENSION IF NOT EXISTS postgis;
 
--- Create Enum for Center Type
-CREATE TYPE center_type AS ENUM ('VETERINARIA', 'ACOPIO');
-
 -- Create Centers Table
 CREATE TABLE IF NOT EXISTS centers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     address TEXT NOT NULL,
     contact_number VARCHAR(50),
-    type center_type NOT NULL,
+    type VARCHAR(50) NOT NULL,
     
     -- Urgency Status: 
     -- 0: Verde (No requiere)
@@ -18,9 +15,8 @@ CREATE TABLE IF NOT EXISTS centers (
     -- 2: Rojo (Crítico)
     urgency_status INT DEFAULT 0,
     
-    -- Real-time Status Logic
-    -- Stored as JSON: {"open": "09:00", "close": "18:00", "days": [1,2,3,4,5]}
-    operating_hours JSONB,
+    -- Operating hours as plain text (e.g., "Lun-Vie 9-18")
+    operating_hours TEXT,
     
     -- Categories/Supplies
     -- Stored as JSON array: ["Alimentos", "Agua", "Medicamentos"]

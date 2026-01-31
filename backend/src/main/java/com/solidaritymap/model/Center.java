@@ -29,15 +29,14 @@ public class Center {
     private String contactNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(50)")
     private CenterType type;
 
     @Column(name = "urgency_status")
     private Integer urgencyStatus; // 0, 1, 2
 
-    @Column(name = "operating_hours", columnDefinition = "jsonb")
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
-    private String operatingHours; // Storing as JSON String for simplicity initially
+    @Column(name = "operating_hours", columnDefinition = "text")
+    private String operatingHours; // Plain text format, e.g., "Lun-Vie 9-18"
 
     @Column(name = "supplies_needed", columnDefinition = "jsonb")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)

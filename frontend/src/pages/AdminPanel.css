@@ -1,0 +1,274 @@
+.admin-panel {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.admin-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    color: #333;
+}
+
+.admin-header p {
+    margin: 0;
+    color: #666;
+    font-size: 1.05rem;
+}
+
+.admin-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.admin-section h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.filters-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 250px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.8rem 1.2rem;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.filter-btn:hover {
+    border-color: #4a90e2;
+    background: #f0f8ff;
+}
+
+.filter-btn.active {
+    background: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.centers-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.centers-table thead {
+    background: #f8f9fa;
+}
+
+.centers-table th {
+    text-align: left;
+    padding: 1rem;
+    font-weight: 700;
+    color: #555;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.centers-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.centers-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.centers-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.center-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.center-address {
+    color: #666;
+    max-width: 300px;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.type-acopio {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.type-veterinaria {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.urgency-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-low {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.badge-medium {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.badge-high {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    padding: 0.5rem 0.8rem;
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.edit-btn:hover {
+    background: #e3f2fd;
+    transform: scale(1.1);
+}
+
+.delete-btn:hover {
+    background: #ffebee;
+    transform: scale(1.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+}
+
+.btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #4a90e2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #357abd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .admin-panel {
+        padding: 1rem;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .admin-header .btn {
+        width: 100%;
+    }
+
+    .filters-row {
+        flex-direction: column;
+    }
+
+    .filter-buttons {
+        flex-wrap: wrap;
+    }
+
+    .table-container {
+        overflow-x: scroll;
+    }
+
+    .centers-table {
+        font-size: 0.85rem;
+    }
+
+    .centers-table th,
+    .centers-table td {
+        padding: 0.7rem 0.5rem;
+    }
+
+    .center-address {
+        max-width: 200px;
+        font-size: 0.8rem;
+    }
+}

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 
 import { useCenters } from '../hooks/useCenters';
+import { useGeolocation } from '../hooks/useGeolocation';
+import { useNearbyCenters } from '../hooks/useNearbyCenters';
 import FilterButtons from '../components/common/FilterButtons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
@@ -10,8 +12,16 @@ import CenterCard from '../components/common/CenterCard';
 const ListView = () => {
     const [selectedType, setSelectedType] = useState('ALL');
     const [searchTerm, setSearchTerm] = useState('');
+    const [nearbyMode, setNearbyMode] = useState(false);
+    const [searchRadius, setSearchRadius] = useState(5000);
 
-    const { centers, loading, error } = useCenters(selectedType === 'ALL' ? null : selectedType);
+    const { centers: allCenters, loading, error } = useCenters(selectedType === 'ALL' ? null : selectedType);
+    const { location: userLocation } = useGeolocation();
+    const { centers: nearbyCenters, loading: nearbyLoading } = useNearbyCenters(userLocation, searchRadius, nearbyMode);
+
+    // Use nearby centers when in nearby mode, otherwise all centers
+    const centers = nearbyMode ? nearbyCenters : allCenters;
+    const isLoading = nearbyMode ? nearbyLoading : loading;
 
     // Filtrar centros por búsqueda
     const filteredCenters = centers.filter(c =>
@@ -19,7 +29,15 @@ const ListView = () => {
         c.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Configuración de filtros
+    const handleNearbyToggle = () => {
+        if (!userLocation) {
+            alert('Necesitas habilitar la geolocalización para usar esta función');
+            return;
+        }
+        setNearbyMode(!nearbyMode);
+    };
+
+    // Configuración de fil tros
     const filters = [
         { id: 'ALL', label: 'Todos', count: centers.length },
         { id: 'ACOPIO', label: 'Acopio', icon: '📦' },
@@ -37,6 +55,39 @@ const ListView = () => {
 
                 {/* Filters & Search */}
                 <div className="bg-white rounded-xl shadow-md p-4 mb-6 space-y-4">
+                    {/* Nearby Search Button */}
+                    <button
+                        onClick={handleNearbyToggle}
+                        disabled={!userLocation}
+                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${nearbyMode
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            } ${!userLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        <MapPin size={20} />
+                        {nearbyMode ? `Mostrando ${centers.length} cerca` : 'Cerca de mí'}
+                    </button>
+
+                    {/* Radius Selector (only in nearby mode) */}
+                    {nearbyMode && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <label className="block text-sm font-semibold text-blue-900 mb-2">
+                                Radio de búsqueda
+                            </label>
+                            <select
+                                value={searchRadius}
+                                onChange={(e) => setSearchRadius(Number(e.target.value))}
+                                className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value={1000}>1 km</option>
+                                <option value={3000}>3 km</option>
+                                <option value={5000}>5 km</option>
+                                <option value={10000}>10 km</option>
+                                <option value={20000}>20 km</option>
+                            </select>
+                        </div>
+                    )}
+
                     {/* Search */}
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -56,8 +107,8 @@ const ListView = () => {
                                 key={filter.id}
                                 onClick={() => setSelectedType(filter.id)}
                                 className={`px-4 py-2 rounded-lg font-medium transition ${selectedType === filter.id
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
                                 {filter.icon && <span className="mr-1">{filter.icon}</span>}
