@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Map, List, Settings, Menu, X } from 'lucide-react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Map, List, Settings, Menu, X, LogOut, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user, isAuthenticated, logout } = useAuth();
 
     const isActive = (path) => {
         if (path === '/') return location.pathname === '/';
         return location.pathname.startsWith(path);
+    };
+
+    const handleLogout = () => {
+        console.log('👋 Logout button clicked');
+        logout();
+        navigate('/login');
     };
 
     const navItems = [
@@ -46,6 +55,38 @@ const Layout = () => {
                                 </Link>
                             ))}
                         </nav>
+
+                        {/* User Info & Logout (Desktop) */}
+                        <div className="hidden md:flex items-center gap-3">
+                            {isAuthenticated ? (
+                                <>
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg">
+                                        <User size={16} />
+                                        <span className="text-sm font-medium">{user?.username}</span>
+                                        {user?.role === 'ADMIN' && (
+                                            <span className="px-2 py-0.5 bg-yellow-400 text-gray-900 text-xs font-bold rounded">
+                                                ADMIN
+                                            </span>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                                    >
+                                        <LogOut size={16} />
+                                        <span className="text-sm">Salir</span>
+                                    </button>
+                                </>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                                >
+                                    <User size={18} />
+                                    <span>Iniciar Sesión</span>
+                                </Link>
+                            )}
+                        </div>
 
                         {/* Mobile Menu Button */}
                         <button
