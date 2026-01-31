@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Search, Filter } from 'lucide-react';
 
 import { useCenters } from '../hooks/useCenters';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -9,9 +9,11 @@ import { useNearbyCenters } from '../hooks/useNearbyCenters';
 import { initializeLeafletIcons, createCenterIcon, createUserLocationIcon } from '../constants/icons';
 import { getUrgencyConfig } from '../constants/urgency';
 import { formatDistance, calculateDistance } from '../utils/distance';
-import FilterButtons from '../components/common/FilterButtons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import Badge from '../components/common/Badge';
 
 // Initialize Leaflet icons once
 initializeLeafletIcons();
@@ -48,32 +50,38 @@ const MapView = () => {
         setNearbyMode(!nearbyMode);
     };
 
-    // Configuración de filtros
-    const filters = [
-        { id: 'ALL', label: 'Todos', icon: '📍', count: centers.length },
-        { id: 'ACOPIO', label: 'Acopio', icon: '📦' },
-        { id: 'VETERINARIA', label: 'Veterinarias', icon: '🏥' }
-    ];
+    if (isLoading) return (
+        <div className="h-full flex items-center justify-center bg-gray-50">
+            <LoadingSpinner message="Cargando mapa..." />
+        </div>
+    );
 
-    if (isLoading) return <LoadingSpinner message="Cargando mapa..." />;
-    if (error) return <ErrorMessage error={error} title="Error al cargar centros" />;
+    if (error) return (
+        <div className="p-8">
+            <ErrorMessage error={error} title="Error al cargar centros" />
+        </div>
+    );
 
     return (
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full overflow-hidden">
             <MapContainer
                 center={defaultCenter}
                 zoom={defaultZoom}
-                className="w-full h-full"
+                className="w-full h-full z-0"
                 key={`${defaultCenter[0]}-${defaultCenter[1]}`}
+                zoomControl={false}
             >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                />
 
                 {/* Search Radius Circle */}
                 {nearbyMode && userLocation && (
                     <Circle
                         center={[userLocation.lat, userLocation.lng]}
                         radius={searchRadius}
-                        pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
+                        pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.1, weight: 1 }}
                     />
                 )}
 
@@ -98,7 +106,6 @@ const MapView = () => {
                         ? getUrgencyConfig(center.urgencyStatus)
                         : null;
 
-                    // Calculate distance if we have user location
                     const distance = userLocation && center.location
                         ? formatDistance(
                             calculateDistance(
@@ -112,30 +119,37 @@ const MapView = () => {
 
                     return (
                         <Marker key={center.id} position={pos} icon={createCenterIcon(center.type)}>
-                            <Popup>
-                                <div className="p-2 min-w-[250px]">
-                                    <h3 className="font-bold text-lg mb-2">{center.name}</h3>
-                                    <div className="space-y-1 text-sm">
-                                        <p><strong>📍</strong> {center.address}</p>
+                            <Popup className="custom-popup">
+                                <div className="p-1 min-w-[220px]">
+                                    <h3 className="font-bold text-base mb-2 text-gray-900">{center.name}</h3>
+
+                                    <div className="flex flex-wrap gap-2 mb-2">
+                                        <Badge variant={center.type === 'ACOPIO' ? 'primary' : 'secondary'} size="sm">
+                                            {center.type === 'ACOPIO' ? 'Acopio' : 'Veterinaria'}
+                                        </Badge>
+
+                                        {urgencyInfo && (
+                                            <Badge variant={urgencyInfo.color.includes('red') ? 'danger' : urgencyInfo.color.includes('yellow') ? 'warning' : 'success'} size="sm">
+                                                {urgencyInfo.label}
+                                            </Badge>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-1 text-xs text-gray-600">
+                                        <p className="flex items-start gap-1">
+                                            <MapPin size={14} className="mt-0.5 text-gray-400" />
+                                            <span className="flex-1">{center.address}</span>
+                                        </p>
+
                                         {distance && (
-                                            <p className="text-blue-600 font-semibold">
-                                                <strong>🚶</strong> {distance}
+                                            <p className="flex items-center gap-1 font-semibold text-primary-600">
+                                                <span>🚶</span> {distance}
                                             </p>
                                         )}
-                                        {center.contactNumber && <p><strong>📞</strong> {center.contactNumber}</p>}
-                                        <p>
-                                            <strong>🏷️</strong>
-                                            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${center.type === 'ACOPIO' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                                                }`}>
-                                                {center.type === 'ACOPIO' ? 'Acopio' : 'Veterinaria'}
-                                            </span>
-                                        </p>
-                                        {urgencyInfo && (
-                                            <p>
-                                                <strong>Estado:</strong>
-                                                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${urgencyInfo.color}`}>
-                                                    {urgencyInfo.icon} {urgencyInfo.label}
-                                                </span>
+
+                                        {center.contactNumber && (
+                                            <p className="flex items-center gap-1">
+                                                <span>📞</span> {center.contactNumber}
                                             </p>
                                         )}
                                     </div>
@@ -147,69 +161,108 @@ const MapView = () => {
             </MapContainer>
 
             {/* Floating Filter Panel */}
-            <div className="absolute top-4 left-4 z-[1000] bg-white rounded-xl shadow-2xl overflow-hidden max-w-sm w-full sm:w-80">
-                <button
-                    onClick={() => setFiltersOpen(!filtersOpen)}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold flex items-center justify-between md:hidden"
-                >
-                    <span>Filtros</span>
-                    {filtersOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                </button>
-
-                <div className={`p-4 ${filtersOpen ? 'block' : 'hidden'} md:block`}>
-                    {/* Nearby Search Button */}
+            <div className="absolute top-4 left-4 z-[1000] w-full max-w-sm px-4 sm:px-0">
+                <Card className="overflow-hidden shadow-2xl border-0 bg-white/95 backdrop-blur-md">
                     <button
-                        onClick={handleNearbyToggle}
-                        disabled={!userLocation}
-                        className={`w-full mb-4 px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${nearbyMode
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            } ${!userLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => setFiltersOpen(!filtersOpen)}
+                        className="w-full px-4 py-3 flex items-center justify-between font-semibold text-gray-800 border-b border-gray-100 sm:cursor-default"
                     >
-                        <MapPin size={20} />
-                        {nearbyMode ? `Mostrando ${centers.length} cerca` : 'Cerca de mí'}
+                        <span className="flex items-center gap-2">
+                            <Filter size={18} className="text-primary-600" />
+                            Filtros y Búsqueda
+                        </span>
+                        <div className="sm:hidden">
+                            {filtersOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </div>
                     </button>
 
-                    {/* Radius Selector (only in nearby mode) */}
-                    {nearbyMode && (
-                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <label className="block text-sm font-semibold text-blue-900 mb-2">
-                                Radio de búsqueda
+                    <div className={`p-4 space-y-4 ${filtersOpen ? 'block' : 'hidden'} animate-fade-in`}>
+                        {/* Type Filters */}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                                Tipo de Centro
                             </label>
-                            <select
-                                value={searchRadius}
-                                onChange={(e) => setSearchRadius(Number(e.target.value))}
-                                className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant={selectedType === 'ALL' ? 'primary' : 'outline'}
+                                    onClick={() => setSelectedType('ALL')}
+                                    className="flex-1 justify-center"
+                                >
+                                    Todos
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant={selectedType === 'ACOPIO' ? 'primary' : 'outline'}
+                                    onClick={() => setSelectedType('ACOPIO')}
+                                    className="flex-1 justify-center"
+                                >
+                                    Acopios
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant={selectedType === 'VETERINARIA' ? 'primary' : 'outline'}
+                                    onClick={() => setSelectedType('VETERINARIA')}
+                                    className="flex-1 justify-center"
+                                >
+                                    Veterinarias
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Nearby Toggle */}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                                Ubicación
+                            </label>
+                            <Button
+                                variant={nearbyMode ? 'secondary' : 'outline'}
+                                className="w-full justify-center"
+                                onClick={handleNearbyToggle}
+                                disabled={!userLocation}
+                                icon={<MapPin size={16} />}
                             >
-                                <option value={1000}>1 km</option>
-                                <option value={3000}>3 km</option>
-                                <option value={5000}>5 km</option>
-                                <option value={10000}>10 km</option>
-                                <option value={20000}>20 km</option>
-                            </select>
+                                {nearbyMode ? 'Modo Cercanía Activado' : 'Buscar Cerca de Mí'}
+                            </Button>
                         </div>
-                    )}
 
-                    {/* Location Status */}
-                    {userLocation && (
-                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <p className="text-sm text-green-700 font-medium">📍 Ubicación detectada</p>
-                        </div>
-                    )}
-                    {locationError && (
-                        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <p className="text-sm text-yellow-700">{locationError}</p>
-                        </div>
-                    )}
+                        {/* Radius Slider */}
+                        {nearbyMode && (
+                            <div className="bg-secondary-50 p-3 rounded-lg border border-secondary-100 animate-fade-in">
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="text-xs font-semibold text-secondary-800">
+                                        Radio de búsqueda
+                                    </label>
+                                    <span className="text-xs font-bold text-secondary-600">
+                                        {searchRadius / 1000} km
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="1000"
+                                    max="20000"
+                                    step="1000"
+                                    value={searchRadius}
+                                    onChange={(e) => setSearchRadius(Number(e.target.value))}
+                                    className="w-full h-2 bg-secondary-200 rounded-lg appearance-none cursor-pointer accent-secondary-600"
+                                />
+                            </div>
+                        )}
 
-                    <h3 className="text-sm font-semibold text-gray-600 mb-3">Filtrar por tipo</h3>
-                    <FilterButtons
-                        filters={filters}
-                        selected={selectedType}
-                        onSelect={setSelectedType}
-                        colorScheme="blue"
-                    />
-                </div>
+                        {/* Stats */}
+                        <div className="pt-2 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
+                            <span>Mostrando:</span>
+                            <span className="font-semibold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-full">
+                                {centers.length} centros
+                            </span>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            {/* Attribution */}
+            <div className="absolute bottom-1 right-1 z-[1000] bg-white/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-gray-500 pointer-events-none">
+                Solidarity Map v1.0
             </div>
         </div>
     );

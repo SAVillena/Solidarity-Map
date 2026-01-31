@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/centers")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Allow all origins for development
+
 public class CenterController {
 
     private final CenterService centerService;
@@ -33,6 +33,18 @@ public class CenterController {
     @GetMapping
     public List<CenterDTO> getAllCenters(@RequestParam(required = false) CenterType type) {
         return centerService.getAllCenters(type);
+    }
+
+    /**
+     * Búsqueda avanzada de centros
+     * GET /api/centers/search?query=...&type=...&urgency=...
+     */
+    @GetMapping("/search")
+    public List<CenterDTO> searchCenters(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) CenterType type,
+            @RequestParam(required = false) Integer urgencyStatus) {
+        return centerService.searchCenters(query, type, urgencyStatus);
     }
 
     /**
@@ -58,24 +70,19 @@ public class CenterController {
      * @return Mensaje de éxito con estadísticas
      */
     @PostMapping("/import")
-    public ResponseEntity<Map<String, Object>> importCenters(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> importCenters(@RequestParam("file") MultipartFile file)
+            throws IOException {
         log.info("📁 Iniciando importación de centros desde archivo: {}", file.getOriginalFilename());
 
-        try {
-            int imported = excelService.importCenters(file);
+        int imported = excelService.importCenters(file);
 
-            log.info("✅ Importación exitosa: {} centros importados", imported);
+        log.info("✅ Importación exitosa: {} centros importados", imported);
 
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Centros importados exitosamente",
-                    "centersImported", imported,
-                    "filename", file.getOriginalFilename()));
-
-        } catch (IOException e) {
-            log.error("❌ Error al procesar archivo: {}", e.getMessage());
-            throw new RuntimeException("Error al procesar el archivo Excel: " + e.getMessage(), e);
-        }
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Centros importados exitosamente",
+                "centersImported", imported,
+                "filename", file.getOriginalFilename()));
     }
 
     /**

@@ -7,6 +7,8 @@ import com.solidaritymap.model.Center;
 import com.solidaritymap.model.CenterType;
 import com.solidaritymap.repository.CenterRepository;
 import com.solidaritymap.validator.CoordinateValidator;
+import com.solidaritymap.repository.CenterSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,61 +1,78 @@
 import React from 'react';
-import { MapPin, Phone } from 'lucide-react';
+import { MapPin, Phone, Box, Stethoscope } from 'lucide-react';
 import { getUrgencyConfig } from '../../constants/urgency';
 import { formatDistance } from '../../utils/distance';
+import Badge from './Badge';
+import Card from './Card';
 
 /**
  * Componente reutilizable de tarjeta de centro
- * Sigue SRP: responsabilidad única de mostrar datos de centro
  */
 const CenterCard = ({ center }) => {
     const urgencyInfo = center.urgencyStatus !== null
         ? getUrgencyConfig(center.urgencyStatus)
         : null;
 
+    const urgencyVariant = {
+        'bg-green-100 text-green-800': 'success',
+        'bg-yellow-100 text-yellow-800': 'warning',
+        'bg-red-100 text-red-800': 'danger'
+    }[urgencyInfo?.color] || 'gray';
+
+    const typeIcon = center.type === 'ACOPIO' ? <Box size={14} /> : <Stethoscope size={14} />;
+    const typeLabel = center.type === 'ACOPIO' ? 'Centro de Acopio' : 'Veterinaria';
+    const typeVariant = center.type === 'ACOPIO' ? 'primary' : 'secondary';
+
     return (
-        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6">
-            <div className="flex items-start justify-between mb-3">
+        <Card hover clickable className="p-5 flex flex-col gap-3 border border-transparent hover:border-primary-100 transition-colors">
+            {/* Header */}
+            <div className="flex justify-between items-start">
                 <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800 mb-1">
-                        {center.type === 'ACOPIO' ? '📦' : '🏥'} {center.name}
+                    <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2">
+                        {center.name}
                     </h3>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${center.type === 'ACOPIO'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-green-100 text-green-700'
-                        }`}>
-                        {center.type === 'ACOPIO' ? 'Centro de Acopio' : 'Veterinaria'}
-                    </span>
+                    <Badge variant={typeVariant} size="sm" className="inline-flex items-center gap-1">
+                        {typeIcon} {typeLabel}
+                    </Badge>
                 </div>
                 {urgencyInfo && (
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${urgencyInfo.color}`}>
-                        {urgencyInfo.icon} {urgencyInfo.label}
-                    </span>
+                    <Badge variant={urgencyVariant} size="sm" dot>
+                        {urgencyInfo.label}
+                    </Badge>
                 )}
             </div>
 
-            <div className="space-y-2 text-gray-700">
-                <div className="flex items-start gap-2">
-                    <MapPin className="flex-shrink-0 mt-0.5" size={18} />
+            {/* Content */}
+            <div className="flex flex-col gap-2 mt-1">
+                <div className="flex items-start gap-2 text-gray-600 text-sm">
+                    <MapPin size={16} className="mt-0.5 flex-shrink-0 text-gray-400" />
                     <span>{center.address}</span>
                 </div>
-                {center.distance !== undefined && (
-                    <div className="text-blue-600 font-semibold text-sm">
-                        🚶 {formatDistance(center.distance)}
-                    </div>
-                )}
+
                 {center.contactNumber && (
-                    <div className="flex items-center gap-2">
-                        <Phone size={18} />
+                    <div className="flex items-center gap-2 text-gray-600 text-sm">
+                        <Phone size={16} className="flex-shrink-0 text-gray-400" />
                         <a
                             href={`tel:${center.contactNumber}`}
-                            className="text-blue-600 hover:underline"
+                            className="hover:text-primary-600 hover:underline transition-colors"
+                            onClick={(e) => e.stopPropagation()}
                         >
                             {center.contactNumber}
                         </a>
                     </div>
                 )}
             </div>
-        </div>
+
+            {/* Footer / Distance */}
+            {center.distance !== undefined && (
+                <div className="mt-2 pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-xs text-gray-400 font-medium">Distancia aproximada</span>
+                    <span className="text-sm font-semibold text-primary-600 flex items-center gap-1">
+                        🚶 {formatDistance(center.distance)}
+                    </span>
+                </div>
+            )}
+        </Card>
     );
 };
 

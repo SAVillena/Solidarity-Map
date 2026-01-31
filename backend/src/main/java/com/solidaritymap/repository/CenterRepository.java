@@ -9,8 +9,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 @Repository
-public interface CenterRepository extends JpaRepository<Center, UUID> {
+public interface CenterRepository extends JpaRepository<Center, UUID>, JpaSpecificationExecutor<Center> {
 
     @Query(value = "SELECT * FROM centers c WHERE ST_DWithin(c.location, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :radiusInMeters)", nativeQuery = true)
     List<Center> findNearest(@Param("lat") double lat, @Param("lon") double lon,

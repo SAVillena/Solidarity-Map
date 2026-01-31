@@ -35,6 +35,23 @@ export const centerService = {
     },
 
     /**
+     * Búsqueda avanzada de centros
+     */
+    search: async (params) => {
+        // params: { query, type, urgencyStatus }
+        const queryParams = new URLSearchParams();
+        if (params.query) queryParams.append('query', params.query);
+        if (params.type && params.type !== 'ALL') queryParams.append('type', params.type);
+        if (params.urgencyStatus !== undefined && params.urgencyStatus !== null) queryParams.append('urgencyStatus', params.urgencyStatus);
+
+        const response = await fetch(`${API_BASE_URL}/centers/search?${queryParams.toString()}`);
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    },
+
+    /**
      * Importa centros desde un archivo Excel
      */
     importFromExcel: async (file) => {

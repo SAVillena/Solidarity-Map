@@ -1,33 +1,74 @@
-import React, { useState } from 'react';
-import { Search, MapPin } from 'lucide-react';
-
-import { useCenters } from '../hooks/useCenters';
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, Box, Stethoscope, Filter, AlertTriangle } from 'lucide-react';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useNearbyCenters } from '../hooks/useNearbyCenters';
-import FilterButtons from '../components/common/FilterButtons';
+import { centerService } from '../services/centerService';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import CenterCard from '../components/common/CenterCard';
+import PageHeader from '../components/common/PageHeader';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
 
 const ListView = () => {
+    // Search & Filter State
     const [selectedType, setSelectedType] = useState('ALL');
+    const [urgencyStatus, setUrgencyStatus] = useState(null); // null, 0, 1, 2
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+    // Data State
+    const [centers, setCenters] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Nearby Mode State
     const [nearbyMode, setNearbyMode] = useState(false);
     const [searchRadius, setSearchRadius] = useState(5000);
 
-    const { centers: allCenters, loading, error } = useCenters(selectedType === 'ALL' ? null : selectedType);
     const { location: userLocation } = useGeolocation();
-    const { centers: nearbyCenters, loading: nearbyLoading } = useNearbyCenters(userLocation, searchRadius, nearbyMode);
-
-    // Use nearby centers when in nearby mode, otherwise all centers
-    const centers = nearbyMode ? nearbyCenters : allCenters;
-    const isLoading = nearbyMode ? nearbyLoading : loading;
-
-    // Filtrar centros por búsqueda
-    const filteredCenters = centers.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.address.toLowerCase().includes(searchTerm.toLowerCase())
+    const { centers: nearbyCenters, loading: nearbyLoading } = useNearbyCenters(
+        nearbyMode ? userLocation : null,
+        searchRadius,
+        nearbyMode
     );
+
+    // Debounce Search Term
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Fetch Centers (Server-side Search)
+    useEffect(() => {
+        if (nearbyMode) return; // Don't fetch if in nearby mode
+
+        const fetchCenters = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const params = {
+                    query: debouncedSearchTerm,
+                    type: selectedType === 'ALL' ? null : selectedType,
+                    urgencyStatus: urgencyStatus === 'ALL' ? null : urgencyStatus
+                };
+                const data = await centerService.search(params);
+                setCenters(data);
+            } catch (err) {
+                console.error("Search error:", err);
+                setError(err.message || 'Error al buscar centros');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCenters();
+    }, [debouncedSearchTerm, selectedType, urgencyStatus, nearbyMode]);
+
+    // Determine what to display
+    const activeCenters = nearbyMode ? nearbyCenters : centers;
+    const isLoading = nearbyMode ? nearbyLoading : loading;
 
     const handleNearbyToggle = () => {
         if (!userLocation) {
@@ -37,105 +78,199 @@ const ListView = () => {
         setNearbyMode(!nearbyMode);
     };
 
-    // Configuración de fil tros
-    const filters = [
-        { id: 'ALL', label: 'Todos', count: centers.length },
-        { id: 'ACOPIO', label: 'Acopio', icon: '📦' },
-        { id: 'VETERINARIA', label: 'Veterinarias', icon: '🏥' }
-    ];
+    const clearFilters = () => {
+        setSearchTerm('');
+        setSelectedType('ALL');
+        setUrgencyStatus(null);
+        setNearbyMode(false);
+    };
 
     return (
-        <div className="h-full overflow-auto bg-gray-50">
-            <div className="container mx-auto px-4 py-6 max-w-4xl">
-                {/* Header */}
-                <div className="mb-6">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Lista de Centros</h2>
-                    <p className="text-gray-600">Encuentra centros de acopio y veterinarias cerca de ti</p>
-                </div>
+        <div className="h-full overflow-y-auto custom-scrollbar bg-gray-50 pb-20">
+            <div className="container mx-auto px-4 py-8 max-w-5xl animate-fade-in">
+                <PageHeader
+                    title="Lista de Centros"
+                    description="Encuentra centros de acopio y veterinarias cerca de ti"
+                />
 
-                {/* Filters & Search */}
-                <div className="bg-white rounded-xl shadow-md p-4 mb-6 space-y-4">
-                    {/* Nearby Search Button */}
-                    <button
-                        onClick={handleNearbyToggle}
-                        disabled={!userLocation}
-                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${nearbyMode
-                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            } ${!userLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        <MapPin size={20} />
-                        {nearbyMode ? `Mostrando ${centers.length} cerca` : 'Cerca de mí'}
-                    </button>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Sidebar Filters */}
+                    <div className="lg:col-span-1 space-y-4">
+                        <Card className="p-4 sticky top-24">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                    <Filter size={18} /> Filtros
+                                </h3>
+                                {(searchTerm || selectedType !== 'ALL' || urgencyStatus !== null || nearbyMode) && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                                    >
+                                        Limpiar
+                                    </button>
+                                )}
+                            </div>
 
-                    {/* Radius Selector (only in nearby mode) */}
-                    {nearbyMode && (
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <label className="block text-sm font-semibold text-blue-900 mb-2">
-                                Radio de búsqueda
-                            </label>
-                            <select
-                                value={searchRadius}
-                                onChange={(e) => setSearchRadius(Number(e.target.value))}
-                                className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value={1000}>1 km</option>
-                                <option value={3000}>3 km</option>
-                                <option value={5000}>5 km</option>
-                                <option value={10000}>10 km</option>
-                                <option value={20000}>20 km</option>
-                            </select>
+                            {/* Search */}
+                            <div className="mb-4">
+                                <Input
+                                    placeholder="Buscar por nombre..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    leftIcon={<Search size={16} />}
+                                    className="text-sm"
+                                    disabled={nearbyMode}
+                                />
+                            </div>
+
+                            {/* Type Filter */}
+                            <div className="space-y-2 mb-6">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</p>
+                                <Button
+                                    variant={selectedType === 'ALL' ? 'primary' : 'ghost'}
+                                    className="w-full justify-start"
+                                    onClick={() => setSelectedType('ALL')}
+                                    disabled={nearbyMode}
+                                >
+                                    Todos
+                                </Button>
+                                <Button
+                                    variant={selectedType === 'ACOPIO' ? 'primary' : 'ghost'}
+                                    className="w-full justify-start"
+                                    onClick={() => setSelectedType('ACOPIO')}
+                                    icon={<Box size={16} />}
+                                    disabled={nearbyMode}
+                                >
+                                    Acopios
+                                </Button>
+                                <Button
+                                    variant={selectedType === 'VETERINARIA' ? 'primary' : 'ghost'}
+                                    className="w-full justify-start"
+                                    onClick={() => setSelectedType('VETERINARIA')}
+                                    icon={<Stethoscope size={16} />}
+                                    disabled={nearbyMode}
+                                >
+                                    Veterinarias
+                                </Button>
+                            </div>
+
+                            {/* Urgency Filter */}
+                            <div className="space-y-2 mb-6">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Urgencia</p>
+                                <div className="grid grid-cols-3 gap-1">
+                                    <button
+                                        onClick={() => setUrgencyStatus(null)}
+                                        disabled={nearbyMode}
+                                        className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${urgencyStatus === null
+                                                ? 'bg-gray-800 text-white border-gray-800'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        Todos
+                                    </button>
+                                    <button
+                                        onClick={() => setUrgencyStatus(2)}
+                                        disabled={nearbyMode}
+                                        className={`px-2 py-1.5 text-xs rounded-md border transition-colors flex justify-center items-center gap-1 ${urgencyStatus === 2
+                                                ? 'bg-red-100 text-red-700 border-red-200 font-bold'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <AlertTriangle size={10} /> Alta
+                                    </button>
+                                    <button
+                                        onClick={() => setUrgencyStatus(1)}
+                                        disabled={nearbyMode}
+                                        className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${urgencyStatus === 1
+                                                ? 'bg-amber-100 text-amber-700 border-amber-200 font-bold'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        Media
+                                    </button>
+                                </div>
+                            </div>
+
+                            <hr className="border-gray-100 my-4" />
+
+                            {/* Nearby Toggle */}
+                            <div className="space-y-3">
+                                <Button
+                                    variant={nearbyMode ? 'secondary' : 'outline'}
+                                    className="w-full justify-center"
+                                    onClick={handleNearbyToggle}
+                                    disabled={!userLocation}
+                                    icon={<MapPin size={16} />}
+                                >
+                                    {nearbyMode ? 'Modo Cercanía Activo' : 'Buscar Cerca de Mí'}
+                                </Button>
+
+                                {nearbyMode && (
+                                    <div className="animate-fade-in bg-secondary-50 p-3 rounded-lg border border-secondary-100">
+                                        <label className="text-xs font-semibold text-secondary-800 block mb-2">
+                                            Radio: {searchRadius / 1000} km
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="1000"
+                                            max="20000"
+                                            step="1000"
+                                            value={searchRadius}
+                                            onChange={(e) => setSearchRadius(Number(e.target.value))}
+                                            className="w-full accent-secondary-600"
+                                        />
+                                        <div className="flex justify-between text-xs text-secondary-600 mt-1">
+                                            <span>1km</span>
+                                            <span>20km</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Main Content List */}
+                    <div className="lg:col-span-3">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="font-semibold text-gray-700">
+                                {activeCenters.length} resultados encontrados
+                            </h3>
+                            {nearbyMode && (
+                                <span className="text-xs font-medium text-secondary-600 bg-secondary-50 px-2 py-1 rounded-md">
+                                    Ordenado por cercanía
+                                </span>
+                            )}
                         </div>
-                    )}
 
-                    {/* Search */}
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Buscar por nombre o dirección..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                        {isLoading ? (
+                            <div className="flex justify-center py-12">
+                                <LoadingSpinner message="Buscando centros..." />
+                            </div>
+                        ) : error ? (
+                            <ErrorMessage error={error} title="Error al cargar centros" />
+                        ) : activeCenters.length === 0 ? (
+                            <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
+                                <div className="inline-flex justify-center items-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+                                    <Search size={32} className="text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900">No se encontraron centros</h3>
+                                <p className="text-gray-500 mt-1">Intenta ajustar tu búsqueda o filtros</p>
+                                <Button
+                                    variant="ghost"
+                                    className="mt-4"
+                                    onClick={clearFilters}
+                                >
+                                    Limpiar todos los filtros
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-in-up">
+                                {activeCenters.map(center => (
+                                    <CenterCard key={center.id} center={center} />
+                                ))}
+                            </div>
+                        )}
                     </div>
-
-                    {/* Type Filter */}
-                    <div className="flex gap-2 flex-wrap">
-                        {filters.map(filter => (
-                            <button
-                                key={filter.id}
-                                onClick={() => setSelectedType(filter.id)}
-                                className={`px-4 py-2 rounded-lg font-medium transition ${selectedType === filter.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {filter.icon && <span className="mr-1">{filter.icon}</span>}
-                                {filter.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Results Count */}
-                <div className="mb-4 text-gray-600">
-                    <span className="font-semibold">{filteredCenters.length}</span> centros encontrados
-                </div>
-
-                {/* Centers List */}
-                <div className="space-y-4">
-                    {loading ? (
-                        <LoadingSpinner message="Cargando centros..." />
-                    ) : error ? (
-                        <ErrorMessage error={error} title="Error al cargar centros" />
-                    ) : filteredCenters.length === 0 ? (
-                        <ErrorMessage error="No se encontraron centros" title="Sin resultados" />
-                    ) : (
-                        filteredCenters.map(center => (
-                            <CenterCard key={center.id} center={center} />
-                        ))
-                    )}
                 </div>
             </div>
         </div>

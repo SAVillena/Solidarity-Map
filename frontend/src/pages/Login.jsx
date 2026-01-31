@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Lock, User, ArrowLeft } from 'lucide-react';
+import Card from '../components/common/Card';
+import Input from '../components/common/Input';
+import Button from '../components/common/Button';
 
 /**
  * Página de Login
@@ -39,99 +42,85 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4">
-                        <Lock className="text-white" size={32} />
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+            <Card className="w-full max-w-md animate-scale-in shadow-2xl overflow-hidden glass">
+                <div className="p-8">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-primary-600 to-primary-400 rounded-2xl shadow-lg mb-4 transform rotate-3 hover:rotate-6 transition-transform duration-300">
+                            <Lock className="text-white" size={32} />
+                        </div>
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+                            Bienvenido
+                        </h1>
+                        <p className="text-gray-500 font-medium">
+                            Accede al panel de administración
+                        </p>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                        Iniciar Sesión
-                    </h1>
-                    <p className="text-gray-600">
-                        Accede al panel de administración
-                    </p>
-                </div>
 
-                {/* Error Message */}
-                {error && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                        <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
-                        <p className="text-red-700 text-sm">{error}</p>
-                    </div>
-                )}
+                    {/* Error Message */}
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-red-700 animate-slide-in-down">
+                            <p className="text-sm font-medium">{error}</p>
+                        </div>
+                    )}
 
-                {/* Login Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Username */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Usuario
-                        </label>
-                        <div className="relative">
-                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Ingresa tu usuario"
-                                required
-                                disabled={loading}
-                            />
+                    {/* Login Form */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <Input
+                            label="Usuario"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Ingresa tu usuario"
+                            leftIcon={<User size={20} />}
+                            required
+                            disabled={loading}
+                        />
+
+                        <Input
+                            label="Contraseña"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Ingresa tu contraseña"
+                            leftIcon={<Lock size={20} />}
+                            required
+                            disabled={loading}
+                        />
+
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            className="w-full mt-2"
+                            loading={loading}
+                            disabled={loading}
+                        >
+                            Iniciar Sesión
+                        </Button>
+                    </form>
+
+                    {/* Help Text */}
+                    <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+                        <div className="text-xs text-gray-500 bg-gray-50 py-2 px-4 rounded-lg inline-block">
+                            Demo: <strong>admin</strong> / <strong>admin123</strong>
                         </div>
                     </div>
 
-                    {/* Password */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Contraseña
-                        </label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Ingresa tu contraseña"
-                                required
-                                disabled={loading}
-                            />
-                        </div>
+                    {/* Back to Home Button */}
+                    <div className="mt-6">
+                        <Link to="/">
+                            <Button
+                                variant="ghost"
+                                className="w-full text-gray-500 hover:text-gray-900"
+                                icon={<ArrowLeft size={18} />}
+                            >
+                                Volver al Inicio
+                            </Button>
+                        </Link>
                     </div>
-
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full py-3 rounded-lg font-semibold text-white transition-all ${loading
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
-                            }`}
-                    >
-                        {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-                    </button>
-                </form>
-
-                {/* Help Text */}
-                <div className="mt-6 text-center text-sm text-gray-600">
-                    <p>Usuario por defecto: <strong>admin</strong></p>
-                    <p>Contraseña: <strong>admin123</strong></p>
                 </div>
-
-                {/* Back to Home Button */}
-                <div className="mt-6">
-                    <Link
-                        to="/"
-                        className="flex items-center justify-center gap-2 w-full py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all"
-                    >
-                        <ArrowLeft size={20} />
-                        Volver al Inicio
-                    </Link>
-                </div>
-            </div>
+            </Card>
         </div>
     );
 };

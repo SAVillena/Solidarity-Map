@@ -1,14 +1,25 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 /**
  * Componente de spinner de carga reutilizable
- * Sigue SRP: responsabilidad única de mostrar loading state
+ * Actualizado con el sistema de diseño
  */
-const LoadingSpinner = ({ message = 'Cargando...' }) => {
+const LoadingSpinner = ({ message = 'Cargando...', size = 'md' }) => {
+    const sizes = {
+        sm: 'w-4 h-4',
+        md: 'w-8 h-8',
+        lg: 'w-12 h-12'
+    };
+
     return (
-        <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">{message}</p>
+        <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
+            <Loader2 className={`animate-spin text-primary-500 ${sizes[size]}`} />
+            {message && (
+                <p className="mt-3 text-sm font-medium text-gray-500 animate-pulse">
+                    {message}
+                </p>
+            )}
         </div>
     );
 };
