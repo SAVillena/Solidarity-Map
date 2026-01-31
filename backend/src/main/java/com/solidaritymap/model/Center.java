@@ -42,6 +42,10 @@ public class Center {
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     private String suppliesNeeded;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'APPROVED'")
+    private CenterStatus status = CenterStatus.APPROVED;
+
     // PostGIS Point
     @Column(columnDefinition = "geography(Point,4326)")
     @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.solidaritymap.config.PointSerializer.class)

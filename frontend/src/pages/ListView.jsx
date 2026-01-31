@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Box, Stethoscope, Filter, AlertTriangle } from 'lucide-react';
+import { Search, MapPin, Box, Stethoscope, Filter, AlertTriangle, Plus } from 'lucide-react';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useNearbyCenters } from '../hooks/useNearbyCenters';
 import { centerService } from '../services/centerService';
@@ -10,6 +10,7 @@ import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
+import SuggestCenterModal from '../components/SuggestCenterModal';
 
 const ListView = () => {
     // Search & Filter State
@@ -17,6 +18,9 @@ const ListView = () => {
     const [urgencyStatus, setUrgencyStatus] = useState(null); // null, 0, 1, 2
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+    // Modal State
+    const [suggestModalOpen, setSuggestModalOpen] = useState(false);
 
     // Data State
     const [centers, setCenters] = useState([]);
@@ -91,6 +95,16 @@ const ListView = () => {
                 <PageHeader
                     title="Lista de Centros"
                     description="Encuentra centros de acopio y veterinarias cerca de ti"
+                    actions={
+                        <Button
+                            variant="primary"
+                            onClick={() => setSuggestModalOpen(true)}
+                            icon={<Plus size={18} />}
+                            className="shadow-lg shadow-blue-500/30"
+                        >
+                            Sugerir Centro
+                        </Button>
+                    }
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -162,8 +176,8 @@ const ListView = () => {
                                         onClick={() => setUrgencyStatus(null)}
                                         disabled={nearbyMode}
                                         className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${urgencyStatus === null
-                                                ? 'bg-gray-800 text-white border-gray-800'
-                                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                            ? 'bg-gray-800 text-white border-gray-800'
+                                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                                             }`}
                                     >
                                         Todos
@@ -172,8 +186,8 @@ const ListView = () => {
                                         onClick={() => setUrgencyStatus(2)}
                                         disabled={nearbyMode}
                                         className={`px-2 py-1.5 text-xs rounded-md border transition-colors flex justify-center items-center gap-1 ${urgencyStatus === 2
-                                                ? 'bg-red-100 text-red-700 border-red-200 font-bold'
-                                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                            ? 'bg-red-100 text-red-700 border-red-200 font-bold'
+                                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                                             }`}
                                     >
                                         <AlertTriangle size={10} /> Alta
@@ -182,8 +196,8 @@ const ListView = () => {
                                         onClick={() => setUrgencyStatus(1)}
                                         disabled={nearbyMode}
                                         className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${urgencyStatus === 1
-                                                ? 'bg-amber-100 text-amber-700 border-amber-200 font-bold'
-                                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                            ? 'bg-amber-100 text-amber-700 border-amber-200 font-bold'
+                                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                                             }`}
                                     >
                                         Media
@@ -273,6 +287,14 @@ const ListView = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Modal */}
+            {suggestModalOpen && (
+                <SuggestCenterModal
+                    onClose={() => setSuggestModalOpen(false)}
+                    onSuccess={() => alert('¡Sugerencia enviada! Un administrador revisará tu solicitud.')}
+                />
+            )}
         </div>
     );
 };

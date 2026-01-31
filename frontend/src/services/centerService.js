@@ -1,54 +1,52 @@
+import axios from 'axios';
+
 // API base URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
+// Configurar instancia de axios
+const api = axios.create({
+    baseURL: API_BASE_URL,
+});
+
+// Interceptor para agregar token (por si acaso no está en defaults, aunque authService lo pone)
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 /**
  * Servicio centralizado para todas las operaciones de centros
- * Sigue SRP: responsabilidad única de comunicación con API
+ * Utiliza axios para aprovechar los interceptores de auth
  */
 export const centerService = {
     /**
      * Obtiene todos los centros, opcionalmente filtrados por tipo
      */
     getAll: async (type = null) => {
-        const url = type
-            ? `${API_BASE_URL}/centers?type=${type}`
-            : `${API_BASE_URL}/centers`;
-
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
+        const url = type ? `/centers?type=${type}` : '/centers';
+        const response = await api.get(url);
+        return response.data;
     },
 
     /**
      * Obtiene centros cercanos a una ubicación
      */
     getNearby: async (lat, lon, radius = 5000) => {
-        const url = `${API_BASE_URL}/centers/nearest?lat=${lat}&lon=${lon}&radius=${radius}`;
-
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
+        const response = await api.get(`/centers/nearest`, {
+            params: { lat, lon, radius }
+        });
+        return response.data;
     },
 
     /**
      * Búsqueda avanzada de centros
      */
     search: async (params) => {
-        // params: { query, type, urgencyStatus }
-        const queryParams = new URLSearchParams();
-        if (params.query) queryParams.append('query', params.query);
-        if (params.type && params.type !== 'ALL') queryParams.append('type', params.type);
-        if (params.urgencyStatus !== undefined && params.urgencyStatus !== null) queryParams.append('urgencyStatus', params.urgencyStatus);
-
-        const response = await fetch(`${API_BASE_URL}/centers/search?${queryParams.toString()}`);
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
+        const response = await api.get('/centers/search', { params });
+        return response.data;
     },
 
     /**
@@ -58,112 +56,82 @@ export const centerService = {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`${API_BASE_URL}/centers/import`, {
-            method: 'POST',
-            body: formData,
+        const response = await api.post('/centers/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
         });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al importar archivo');
-        }
-
-        return response.json();
+        return response.data;
     },
 
     /**
      * Obtiene un centro por su ID
      */
     getById: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/centers/${id}`);
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('Centro no encontrado');
-            }
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        return response.json();
+        const response = await api.get(`/centers/${id}`);
+        return response.data;
     },
 
     /**
      * Crea un nuevo centro
      */
     create: async (centerData) => {
-        const response = await fetch(`${API_BASE_URL}/centers`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(centerData),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al crear centro');
-        }
-
-        return response.json();
+        const response = await api.post('/centers', centerData);
+        return response.data;
     },
 
     /**
      * Actualiza un centro existente
      */
     update: async (id, centerData) => {
-        const response = await fetch(`${API_BASE_URL}/centers/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(centerData),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al actualizar centro');
-        }
-
-        return response.json();
+        const response = await api.put(`/centers/${id}`, centerData);
+        return response.data;
     },
 
     /**
      * Actualiza solo el estado de urgencia de un centro
      */
     updateUrgency: async (id, urgencyStatus) => {
-        const response = await fetch(`${API_BASE_URL}/centers/${id}/urgency`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ urgencyStatus }),
-        });
+        const response = await api.patch(`/centers/${id}/urgency`, { urgencyStatus });
+        return response.data;
+    },
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al actualizar urgencia');
-        }
+    /**
+     * Sugiere un nuevo centro (Público)
+     */
+    suggest: async (centerData) => {
+        // Este endpoint es público, pero axios enviará el token si existe (no hace daño)
+        const response = await api.post('/centers/suggest', centerData);
+        return response.data;
+    },
 
-        return response.json();
+    /**
+     * Aprueba un centro (Admin)
+     */
+    approve: async (id) => {
+        const response = await api.patch(`/centers/${id}/approve`);
+        return response.data;
+    },
+
+    /**
+     * Rechaza un centro (Admin)
+     */
+    reject: async (id) => {
+        const response = await api.patch(`/centers/${id}/reject`);
+        return response.data;
+    },
+
+    /**
+     * Obtiene centros pendientes (Admin)
+     */
+    getPending: async () => {
+        const response = await api.get('/centers/pending');
+        return response.data;
     },
 
     /**
      * Elimina un centro
      */
     delete: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/centers/${id}`, {
-            method: 'DELETE',
-        });
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('Centro no encontrado');
-            }
-            const error = await response.json();
-            throw new Error(error.message || 'Error al eliminar centro');
-        }
-
-        // DELETE retorna 204 No Content, no hay body que parsear
-        return { success: true };
+        const response = await api.delete(`/centers/${id}`);
+        return response.data;
     }
 };

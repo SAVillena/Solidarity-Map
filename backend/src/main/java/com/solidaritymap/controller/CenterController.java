@@ -150,6 +150,43 @@ public class CenterController {
      * @param id UUID del centro a eliminar
      * @return 204 No Content
      */
+    /**
+     * Sugiere un nuevo centro (Público)
+     */
+    @PostMapping("/suggest")
+    public ResponseEntity<CenterDTO> suggestCenter(
+            @jakarta.validation.Valid @RequestBody com.solidaritymap.dto.CreateCenterRequest request) {
+        log.info("💡 POST /api/centers/suggest - Sugerencia de centro: {}", request.getName());
+        CenterDTO created = centerService.suggestCenter(request);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * Aprueba un centro (Admin)
+     */
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<CenterDTO> approveCenter(@PathVariable java.util.UUID id) {
+        log.info("✅ PATCH /api/centers/{}/approve", id);
+        return ResponseEntity.ok(centerService.approveCenter(id));
+    }
+
+    /**
+     * Rechaza un centro (Admin)
+     */
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<CenterDTO> rejectCenter(@PathVariable java.util.UUID id) {
+        log.info("🚫 PATCH /api/centers/{}/reject", id);
+        return ResponseEntity.ok(centerService.rejectCenter(id));
+    }
+
+    /**
+     * Obtiene centros pendientes (Admin)
+     */
+    @GetMapping("/pending")
+    public List<CenterDTO> getPendingCenters() {
+        return centerService.getCentersByStatus(com.solidaritymap.model.CenterStatus.PENDING);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCenter(@PathVariable java.util.UUID id) {
         log.info("🗑️ DELETE /api/centers/{}", id);

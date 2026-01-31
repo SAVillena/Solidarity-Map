@@ -14,9 +14,14 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 @Repository
 public interface CenterRepository extends JpaRepository<Center, UUID>, JpaSpecificationExecutor<Center> {
 
-    @Query(value = "SELECT * FROM centers c WHERE ST_DWithin(c.location, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :radiusInMeters)", nativeQuery = true)
-    List<Center> findNearest(@Param("lat") double lat, @Param("lon") double lon,
-            @Param("radiusInMeters") double radiusInMeters);
+        @Query(value = "SELECT * FROM centers c WHERE ST_DWithin(c.location, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :radiusInMeters)", nativeQuery = true)
+        List<Center> findNearest(@Param("lat") double lat, @Param("lon") double lon,
+                        @Param("radiusInMeters") double radiusInMeters);
 
-    List<Center> findByType(com.solidaritymap.model.CenterType type);
+        List<Center> findByStatus(com.solidaritymap.model.CenterStatus status);
+
+        List<Center> findByTypeAndStatus(com.solidaritymap.model.CenterType type,
+                        com.solidaritymap.model.CenterStatus status);
+
+        List<Center> findByType(com.solidaritymap.model.CenterType type);
 }

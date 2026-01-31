@@ -93,11 +93,13 @@ public class SecurityConfig {
                         // Endpoints públicos
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/centers/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/centers/suggest").permitAll()
 
                         // Endpoints protegidos - Solo ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/centers/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/centers/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/centers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/centers/**").hasRole("ADMIN")
 
                         // User management - Solo ADMIN
                         .requestMatchers("/api/users/**").hasRole("ADMIN")

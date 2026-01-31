@@ -29,6 +29,7 @@ public class CenterMapper {
                 .contactNumber(center.getContactNumber())
                 .type(center.getType())
                 .urgencyStatus(center.getUrgencyStatus())
+                .status(center.getStatus())
                 .location(toLocationDTO(center.getLocation()))
                 .operatingHours(center.getOperatingHours())
                 .suppliesNeeded(center.getSuppliesNeeded())

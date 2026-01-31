@@ -24,6 +24,7 @@ public class CenterDTO {
     private String contactNumber;
     private CenterType type;
     private Integer urgencyStatus;
+    private com.solidaritymap.model.CenterStatus status;
     private LocationDTO location;
     private String operatingHours;
     private String suppliesNeeded;
