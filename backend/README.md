@@ -1,20 +1,20 @@
-# Backend Architecture
+# Arquitectura del Backend
 
-## Project Structure
-The Spring Boot application follows a layered architecture:
+## Estructura del Proyecto
+La aplicación Spring Boot sigue una arquitectura en capas:
 
 ```
 src/main/java/com/solidaritymap/
-├── config/           # Configuration classes (Security, CORS, Swagger)
-├── controller/       # REST Controllers (API endpoints)
-├── dto/              # Data Transfer Objects (Request/Response models)
-├── model/            # JPA Entities and Enums (Database mapping)
-├── repository/       # Data Access Interfaces (Spring Data JPA)
-├── service/          # Business Logic Layers (e.g., ExcelService)
-└── util/             # Utility classes and helpers
+├── config/           # Clases de configuración (Seguridad, CORS, Swagger)
+├── controller/       # Controladores REST (Endpoints de la API)
+├── dto/              # Objetos de Transferencia de Datos (Modelos de Solicitud/Respuesta)
+├── model/            # Entidades JPA y Enums (Mapeo de Base de Datos)
+├── repository/       # Interfaces de Acceso a Datos (Spring Data JPA)
+├── service/          # Capas de Lógica de Negocio (ej. ExcelService)
+└── util/             # Clases de utilidad y auxiliares
 ```
 
-## Key Components
-- **CentersController**: Endpoints for CRUD and geolocation queries.
-- **ExcelService**: Logic for parsing and importing .xlsx files.
-- **SecurityConfig**: JWT authentication and role-based access control.
+## Componentes Clave
+- **CentersController**: Endpoints para operaciones CRUD y consultas de geolocalización.
+- **ExcelService**: Lógica para analizar e importar archivos .xlsx.
+- **SecurityConfig**: Autenticación JWT y control de acceso basado en roles.
