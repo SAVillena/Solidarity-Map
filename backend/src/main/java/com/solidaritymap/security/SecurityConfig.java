@@ -95,6 +95,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/centers/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/centers/suggest").permitAll()
 
+                        // Swagger UI - acceso público
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+
                         // Endpoints protegidos - Solo ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/centers/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/centers/**").hasRole("ADMIN")
