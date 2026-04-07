@@ -20,7 +20,8 @@ const ImportComponent = () => {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/centers/import', {
+            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+            const response = await fetch(`${API_BASE_URL}/api/centers/import`, {
                 method: 'POST',
                 body: formData,
             });

@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { tokenStorage } from '../utils/tokenStorage';
 
-const API_BASE_URL = 'http://localhost:8080/api/users';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
+    ? `${import.meta.env.VITE_API_BASE_URL}/api/users` 
+    : 'http://localhost:8080/api/users';
 
 /**
  * Servicio para gestión de usuarios

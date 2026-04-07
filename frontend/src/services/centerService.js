@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+// API base URL (Vite usa import.meta.env)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : 'http://localhost:8080/api';
 
 // Configurar instancia de axios
 const api = axios.create({
