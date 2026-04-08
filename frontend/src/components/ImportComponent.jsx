@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { centerService } from '../services/centerService';
 
 const ImportComponent = () => {
     const [file, setFile] = useState(null);
@@ -15,26 +16,14 @@ const ImportComponent = () => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('file', file);
-
         setLoading(true);
         try {
-            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-            const response = await fetch(`${API_BASE_URL}/api/centers/import`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                setMessage("Archivo cargado exitosamente!");
-                // Optionally trigger a refresh of the map
-                window.location.reload();
-            } else {
-                setMessage("Error al cargar archivo.");
-            }
+            await centerService.importFromExcel(file);
+            setMessage("Archivo cargado exitosamente!");
+            // Optionally trigger a refresh of the map
+            window.location.reload();
         } catch (error) {
-            setMessage("Error de conexión: " + error.message);
+            setMessage("Error de conexión o permisos: " + (error.response?.data?.message || error.message));
         } finally {
             setLoading(false);
         }
