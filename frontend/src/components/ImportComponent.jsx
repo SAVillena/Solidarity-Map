@@ -19,9 +19,7 @@ const ImportComponent = () => {
         setLoading(true);
         try {
             await centerService.importFromExcel(file);
-            setMessage("Archivo cargado exitosamente!");
-            // Optionally trigger a refresh of the map
-            window.location.reload();
+            setMessage("¡Archivo cargado exitosamente! Recarga el mapa para ver los cambios.");
         } catch (error) {
             setMessage("Error de conexión o permisos: " + (error.response?.data?.message || error.message));
         } finally {
